@@ -118,7 +118,7 @@ const patientData = {
   }
 };
 
-// Mock appointment data
+// Mock appointment data with priority
 const upcomingAppointments = [
   {
     id: 1,
@@ -129,7 +129,8 @@ const upcomingAppointments = [
     type: "Consultation",
     mode: "In-person",
     status: "Pending",
-    reason: "Hypertension follow-up"
+    reason: "Hypertension follow-up",
+    priority: "High"
   },
   {
     id: 2,
@@ -140,7 +141,8 @@ const upcomingAppointments = [
     type: "Check-up",
     mode: "Video Call",
     status: "Accepted",
-    reason: "Diabetes management"
+    reason: "Diabetes management",
+    priority: "Medium"
   },
   {
     id: 3,
@@ -151,7 +153,8 @@ const upcomingAppointments = [
     type: "Consultation",
     mode: "Video Call",
     status: "Pending",
-    reason: "General checkup"
+    reason: "General checkup",
+    priority: "Low"
   },
   {
     id: 4,
@@ -162,7 +165,8 @@ const upcomingAppointments = [
     type: "Surgery Consultation",
     mode: "In-person",
     status: "Pending",
-    reason: "Knee surgery consultation"
+    reason: "Knee surgery consultation",
+    priority: "High"
   }
 ];
 
@@ -176,7 +180,8 @@ const appointmentHistory = [
     type: "Therapy",
     mode: "In-person",
     status: "Completed",
-    reason: "Anxiety counseling"
+    reason: "Anxiety counseling",
+    priority: "Medium"
   },
   {
     id: 6,
@@ -187,7 +192,8 @@ const appointmentHistory = [
     type: "Follow-up",
     mode: "In-person", 
     status: "Completed",
-    reason: "Arthritis treatment review"
+    reason: "Arthritis treatment review",
+    priority: "Low"
   },
   {
     id: 7,
@@ -198,7 +204,8 @@ const appointmentHistory = [
     type: "Consultation",
     mode: "Video Call",
     status: "Completed",
-    reason: "Blood pressure monitoring"
+    reason: "Blood pressure monitoring",
+    priority: "Medium"
   }
 ];
 
@@ -272,11 +279,63 @@ export function AppointmentSchedule() {
     }
   };
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "High": return "text-red-500";
+      case "Medium": return "text-yellow-500";
+      case "Low": return "text-green-500";
+      default: return "text-gray-500";
+    }
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case "High": return "❤️";
+      case "Medium": return "⚡";
+      case "Low": return "🔽";
+      default: return "⚪";
+    }
+  };
+
+  const pendingAppointments = appointments.filter(apt => apt.status === "Pending").length;
+  const acceptedAppointments = appointments.filter(apt => apt.status === "Accepted").length;
+  const completedAppointments = appointmentHistory.length;
+
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-background to-accent/10">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-foreground bg-gradient-primary bg-clip-text text-transparent">Medical Appointments</h2>
-        <p className="text-muted-foreground mt-2">Manage your appointments and prescriptions efficiently</p>
+        <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-full flex items-center justify-center">
+          <Clock className="h-8 w-8 text-primary-foreground" />
+        </div>
+        <h2 className="text-3xl font-bold text-foreground">Medical Appointments</h2>
+        <p className="text-muted-foreground mt-2">Manage your appointments and prescriptions with our advanced healthcare management system</p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-primary/10 rounded-lg p-4 flex items-center gap-3">
+          <Calendar className="h-8 w-8 text-primary" />
+          <div>
+            <div className="text-2xl font-bold text-foreground">{appointments.length}</div>
+            <div className="text-sm text-muted-foreground">Upcoming Appointments</div>
+          </div>
+        </div>
+        <div className="bg-yellow-100 dark:bg-yellow-900/20 rounded-lg p-4 flex items-center gap-3">
+          <User className="h-8 w-8 text-yellow-600" />
+          <div>
+            <div className="text-2xl font-bold text-foreground">{pendingAppointments}</div>
+            <div className="text-sm text-muted-foreground">Pending Approval</div>
+          </div>
+        </div>
+        <div className="bg-green-100 dark:bg-green-900/20 rounded-lg p-4 flex items-center gap-3">
+          <div className="h-8 w-8 text-green-600 flex items-center justify-center">
+            <div className="w-6 h-6 bg-green-600 rounded" style={{ clipPath: 'polygon(0 50%, 100% 0, 100% 100%)' }}></div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-foreground">{completedAppointments}</div>
+            <div className="text-sm text-muted-foreground">Completed</div>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="upcoming" className="w-full">
@@ -302,6 +361,7 @@ export function AppointmentSchedule() {
                   <TableHead className="font-semibold">Date & Time</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
                   <TableHead className="font-semibold">Reason</TableHead>
+                  <TableHead className="font-semibold">Priority</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
                 </TableRow>
@@ -335,6 +395,16 @@ export function AppointmentSchedule() {
                       <span className="text-sm text-muted-foreground">{appointment.reason}</span>
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-1">
+                        <span className={getPriorityColor(appointment.priority)}>
+                          {getPriorityIcon(appointment.priority)}
+                        </span>
+                        <span className={`text-sm font-medium ${getPriorityColor(appointment.priority)}`}>
+                          {appointment.priority}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Badge variant={getStatusColor(appointment.status)} className="shadow-sm">
                         {appointment.status}
                       </Badge>
@@ -363,7 +433,7 @@ export function AppointmentSchedule() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          disabled={appointment.status !== "Accepted"}
+                          disabled={appointment.status === "Accepted"}
                           onClick={() => handleReschedule(appointment.id, appointment.date, appointment.time)}
                         >
                           Reschedule
@@ -394,6 +464,7 @@ export function AppointmentSchedule() {
                   <TableHead className="font-semibold">Date & Time</TableHead>
                   <TableHead className="font-semibold">Type</TableHead>
                   <TableHead className="font-semibold">Reason</TableHead>
+                  <TableHead className="font-semibold">Priority</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
                 </TableRow>
@@ -425,6 +496,16 @@ export function AppointmentSchedule() {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground">{appointment.reason}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <span className={getPriorityColor(appointment.priority)}>
+                          {getPriorityIcon(appointment.priority)}
+                        </span>
+                        <span className={`text-sm font-medium ${getPriorityColor(appointment.priority)}`}>
+                          {appointment.priority}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusColor(appointment.status)} className="shadow-sm">
