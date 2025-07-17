@@ -11,6 +11,112 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RescheduleDialog } from "./RescheduleDialog";
+import { PatientDetailsDialog } from "./PatientDetailsDialog";
+import { useToast } from "@/hooks/use-toast";
+
+// Mock patient data
+const patientData = {
+  1: {
+    id: "P1-2024-001",
+    name: "Sarah Johnson",
+    dateOfBirth: "March 15, 1990",
+    age: 34,
+    gender: "Female",
+    bloodType: "A+",
+    maritalStatus: "Married",
+    phone: "(555) 123-4567",
+    email: "sarah.johnson@email.com",
+    address: "123 Main Street, Springfield, IL 62701",
+    occupation: "Software Engineer",
+    language: "English",
+    photo: "/lovable-uploads/2db79cf2-3939-4304-bd84-0816905d0314.png"
+  },
+  2: {
+    id: "P2-2024-002",
+    name: "Michael Chen",
+    dateOfBirth: "July 22, 1985",
+    age: 39,
+    gender: "Male",
+    bloodType: "B+",
+    maritalStatus: "Single",
+    phone: "(555) 234-5678",
+    email: "michael.chen@email.com",
+    address: "456 Oak Avenue, Springfield, IL 62702",
+    occupation: "Data Analyst",
+    language: "English"
+  },
+  3: {
+    id: "P3-2024-003",
+    name: "Jennifer Wilson",
+    dateOfBirth: "December 3, 1992",
+    age: 31,
+    gender: "Female",
+    bloodType: "O-",
+    maritalStatus: "Married",
+    phone: "(555) 345-6789",
+    email: "jennifer.wilson@email.com",
+    address: "789 Pine Street, Springfield, IL 62703",
+    occupation: "Teacher",
+    language: "English"
+  },
+  4: {
+    id: "P4-2024-004",
+    name: "Robert Davis",
+    dateOfBirth: "May 18, 1978",
+    age: 46,
+    gender: "Male",
+    bloodType: "AB+",
+    maritalStatus: "Divorced",
+    phone: "(555) 456-7890",
+    email: "robert.davis@email.com",
+    address: "321 Elm Drive, Springfield, IL 62704",
+    occupation: "Construction Manager",
+    language: "English"
+  },
+  5: {
+    id: "P5-2024-005",
+    name: "Emily Rodriguez",
+    dateOfBirth: "September 12, 1988",
+    age: 36,
+    gender: "Female",
+    bloodType: "A-",
+    maritalStatus: "Married",
+    phone: "(555) 567-8901",
+    email: "emily.rodriguez@email.com",
+    address: "654 Maple Lane, Springfield, IL 62705",
+    occupation: "Nurse",
+    language: "English"
+  },
+  6: {
+    id: "P6-2024-006",
+    name: "David Thompson",
+    dateOfBirth: "February 8, 1970",
+    age: 54,
+    gender: "Male",
+    bloodType: "O+",
+    maritalStatus: "Married",
+    phone: "(555) 678-9012",
+    email: "david.thompson@email.com",
+    address: "987 Cedar Road, Springfield, IL 62706",
+    occupation: "Accountant",
+    language: "English"
+  },
+  7: {
+    id: "P7-2024-007",
+    name: "Maria Garcia",
+    dateOfBirth: "November 25, 1995",
+    age: 28,
+    gender: "Female",
+    bloodType: "B-",
+    maritalStatus: "Single",
+    phone: "(555) 789-0123",
+    email: "maria.garcia@email.com",
+    address: "147 Birch Circle, Springfield, IL 62707",
+    occupation: "Marketing Coordinator",
+    language: "Spanish"
+  }
+};
 
 // Mock appointment data
 const upcomingAppointments = [
@@ -98,6 +204,17 @@ const appointmentHistory = [
 
 export function AppointmentSchedule() {
   const [appointments, setAppointments] = useState(upcomingAppointments);
+  const [rescheduleDialog, setRescheduleDialog] = useState({
+    open: false,
+    appointmentId: null as number | null,
+    currentDate: "",
+    currentTime: ""
+  });
+  const [patientDialog, setPatientDialog] = useState({
+    open: false,
+    patientId: null as number | null
+  });
+  const { toast } = useToast();
 
   const handleAcceptAppointment = (appointmentId: number) => {
     setAppointments(prev => 
@@ -107,6 +224,42 @@ export function AppointmentSchedule() {
           : apt
       )
     );
+    toast({
+      title: "Appointment Accepted",
+      description: "The appointment has been successfully accepted.",
+    });
+  };
+
+  const handleReschedule = (appointmentId: number, currentDate: string, currentTime: string) => {
+    setRescheduleDialog({
+      open: true,
+      appointmentId,
+      currentDate,
+      currentTime
+    });
+  };
+
+  const handleRescheduleConfirm = (newDate: string, newTime: string) => {
+    if (rescheduleDialog.appointmentId) {
+      setAppointments(prev => 
+        prev.map(apt => 
+          apt.id === rescheduleDialog.appointmentId 
+            ? { ...apt, date: newDate, time: newTime }
+            : apt
+        )
+      );
+      toast({
+        title: "Appointment Rescheduled",
+        description: `Appointment has been rescheduled to ${newDate} at ${newTime}.`,
+      });
+    }
+  };
+
+  const handleViewPatientDetails = (appointmentId: number) => {
+    setPatientDialog({
+      open: true,
+      patientId: appointmentId
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -207,7 +360,12 @@ export function AppointmentSchedule() {
                           Prescription
                         </Button>
                         
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={appointment.status !== "Accepted"}
+                          onClick={() => handleReschedule(appointment.id, appointment.date, appointment.time)}
+                        >
                           Reschedule
                         </Button>
                       </div>
@@ -275,7 +433,11 @@ export function AppointmentSchedule() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewPatientDetails(appointment.id)}
+                        >
                           View Details
                         </Button>
                         <Button variant="outline" size="sm">
@@ -291,6 +453,20 @@ export function AppointmentSchedule() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <RescheduleDialog
+        open={rescheduleDialog.open}
+        onOpenChange={(open) => setRescheduleDialog(prev => ({ ...prev, open }))}
+        currentDate={rescheduleDialog.currentDate}
+        currentTime={rescheduleDialog.currentTime}
+        onReschedule={handleRescheduleConfirm}
+      />
+
+      <PatientDetailsDialog
+        open={patientDialog.open}
+        onOpenChange={(open) => setPatientDialog(prev => ({ ...prev, open }))}
+        patient={patientDialog.patientId ? patientData[patientDialog.patientId] || null : null}
+      />
     </div>
   );
 }
